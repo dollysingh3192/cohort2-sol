@@ -39,11 +39,69 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
-  const express = require('express');
-  const bodyParser = require('body-parser');
-  
-  const app = express();
-  
-  app.use(bodyParser.json());
-  
-  module.exports = app;
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = 3000;
+
+app.use(bodyParser.json());
+
+const todos = [];
+let id = 1;
+
+app.get("/todos", (req, res) => {
+  return res.status(200).json(todos);
+});
+
+app.get("/todos/:id", (req, res) => {
+  const { id } = req.params;
+  const todo = todos.find(t => t.id === parseInt(id));
+  if(todo) {
+    return res.status(200).json(todo);
+  } else {
+    return res.status(404).send();
+  }
+});
+
+app.post("/todos", (req, res) => {
+  const todo = req.body;
+  const newTodo = { 
+    id: id,
+    ...todo,
+    completed: false 
+  };
+  id += 1;
+  todos.push(newTodo);
+  return res.status(201).json({id: id - 1});
+});
+
+app.put("/todos/:id", (req, res) => {
+  const { id } = req.params;
+  const todo = todos.find(t => t.id === parseInt(id));
+  if(todo) {
+    todo["completed"] = true;
+    if(req.body.title)
+      todo["title"] = req.body.title;
+    if(req.body.description)
+      todo["description"] = req.body.description;
+    return res.status(200).json(todo);
+  } else {
+    return res.status(404).send();
+  }
+});
+
+
+app.delete('/todos/:id', (req,res) => {
+  const { id } = req.params;
+  const idx = todos.find(t => t === parseInt(id));
+  if(idx === -1)
+    return res.status(404).send();
+  todos.splice(idx, 1);
+  return res.status(200).send();
+});
+
+// app.listen(PORT);
+// console.log('Listening on port: ' + PORT);
+
+module.exports = app;
